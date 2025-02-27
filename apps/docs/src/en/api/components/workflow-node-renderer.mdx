@@ -1,0 +1,28 @@
+# WorkflowNodeRenderer(free)
+
+Free layout node container
+
+## Usage
+
+```tsx pure
+import { useNodeRender, WorkflowNodeRenderer } from '@flowgram.ai/free-layout-editor';
+
+export const BaseNode = () => {
+  /**
+   * Provide methods related to node rendering
+   */
+  const { form } = useNodeRender()
+  /**
+   * WorkflowNodeRenderer will add node drag events and port rendering, if you want to deeply customize it, you can refer to the source code of the component:
+   * https://github.com/flowgram-ai/flowgram.ai/blob/main/packages/client/free-layout-editor/src/components/workflow-node-renderer.tsx
+   */
+  return (
+    <WorkflowNodeRenderer className="demo-free-node" node={props.node}>
+      {
+        // Form rendering through formMeta generation
+        form?.render()
+      }
+    </WorkflowNodeRenderer>
+  )
+};
+```

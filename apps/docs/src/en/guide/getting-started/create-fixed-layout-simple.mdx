@@ -1,0 +1,358 @@
+
+# Create a Fixed Layout Canvas
+
+This case can be installed by `npx @flowgram.ai/create-app@latest fixed-layout-simple`, the complete code and effect are as follows:
+
+<div className="rs-tip">
+  <a className="rs-link" href="/flowgram.ai/examples/fixed-layout/fixed-layout-simple.html">
+    Fixed Layout Basic Usage
+  </a>
+</div>
+
+
+### 1. Canvas Entry
+
+- `FixedLayoutEditorProvider`: Canvas configurator, internally generates a react-context for consumption by child components
+- `EditorRenderer`: The final rendered canvas, can be wrapped in other components to customize the canvas position
+
+```tsx pure title="app.tsx"
+
+import {
+  FixedLayoutEditorProvider,
+  EditorRenderer,
+} from '@flowgram.ai/fixed-layout-editor';
+
+import { useEditorProps } from './use-editor-props' // Canvas detailed props configuration
+import { Tools } from './tools' // Canvas tools
+
+function App() {
+  const editorProps = useEditorProps()
+  return (
+    <FixedLayoutEditorProvider {...editorProps}>
+      <EditorRenderer className="demo-editor" />
+      <Tools />
+    </FixedLayoutEditorProvider>
+  );
+}
+```
+
+### 2. Configure Canvas
+
+Canvas configuration uses declarative, providing data, rendering, event, plugin related configurations
+
+```tsx pure title="use-editor-props.tsx"
+import { useMemo } from 'react';
+import { type FixedLayoutProps } from '@flowgram.ai/fixed-layout-editor';
+import { defaultFixedSemiMaterials } from '@flowgram.ai/fixed-semi-materials';
+import { createMinimapPlugin } from '@flowgram.ai/minimap-plugin';
+
+import { intialData } from './initial-data' // Initial data
+import { nodeRegistries } from './node-registries' // Node declaration configuration
+import { BaseNode } from './base-node' // Node rendering
+
+export function useEditorProps(
+): FixedLayoutProps {
+  return useMemo<FixedLayoutProps>(
+    () => ({
+      /**
+       * Initial data
+       */
+      initialData,
+      /**
+       * Canvas node definition
+       */
+      nodeRegistries,
+      /**
+       * Custom UI components can be defined by key, for example, add a button, here is a semi-component set for quick verification, if you need deep customization, refer to:
+       * https://github.com/flowgram-ai/flowgram.ai/blob/main/packages/materials/fixed-semi-materials/src/components/index.tsx
+       */
+      materials: {
+        renderNodes: {
+          ...defaultFixedSemiMaterials,
+          // [FlowRendererKey.ADDER]: NodeAdder,
+          // [FlowRendererKey.BRANCH_ADDER]: BranchAdder,
+        },
+        renderDefaultNode: BaseNode, // Node rendering component
+      },
+      /**
+       * Node engine, used to render node form
+       */
+      nodeEngine: {
+        enable: true,
+      },
+      /**
+       * Canvas history, used to control redo/undo
+       */
+      history: {
+        enable: true,
+        enableChangeNode: true, // Used to listen to node form data changes
+      },
+      /**
+       * Canvas initialization callback
+       */
+      onInit: ctx => {
+        // If you want to dynamically load data, you can execute it asynchronously by the following method
+        // ctx.docuemnt.fromJSON(initialData)
+      },
+      /**
+       * Canvas first rendering completed callback
+       */
+      onAllLayersRendered: (ctx) => {},
+      /**
+       * Canvas destruction callback
+       */
+      onDispose: () => { },
+      plugins: () => [
+        /**
+         * Minimap plugin
+         */
+        createMinimapPlugin({}),
+      ],
+    }),
+    [],
+  );
+}
+
+```
+
+
+### 3. Configure Data
+
+Canvas document data uses a tree structure, supports nesting
+
+:::note Document data basic structure:
+
+- nodes `array` Node list, supports nesting
+
+:::
+
+:::note Node data basic structure:
+
+
+- id: `string` Node unique identifier, must be unique
+- meta: `object` Node ui configuration information, such as free layout `position` information
+- type: `string | number` Node type, will correspond to `type` in `nodeRegistries`
+- data: `object` Node form data
+- blocks: `array` Node branch, using `block` is more in line with `Gramming`
+
+:::
+
+```tsx pure title="initial-data.tsx"
+import { FlowDocumentJSON } from '@flowgram.ai/fixed-layout-editor';
+
+/**
+ * Configure workflow data, data is in the format of nested blocks
+ */
+export const initialData: FlowDocumentJSON = {
+  nodes: [
+    // Start node
+    {
+      id: 'start_0',
+      type: 'start',
+      data: {
+        title: 'Start',
+        content: 'start content'
+      },
+      blocks: [],
+    },
+    // Branch node
+    {
+      id: 'condition_0',
+      type: 'condition',
+      data: {
+        title: 'Condition'
+      },
+      blocks: [
+        {
+          id: 'branch_0',
+          type: 'block',
+          data: {
+            title: 'Branch 0',
+            content: 'branch 1 content'
+          },
+          blocks: [
+            {
+              id: 'custom_0',
+              type: 'custom',
+              data: {
+                title: 'Custom',
+                content: 'custrom content'
+              },
+            },
+          ],
+        },
+        {
+          id: 'branch_1',
+          type: 'block',
+          data: {
+            title: 'Branch 1',
+            content: 'branch 1 content'
+          },
+          blocks: [],
+        },
+      ],
+    },
+    // End node
+    {
+      id: 'end_0',
+      type: 'end',
+      data: {
+        title: 'End',
+        content: 'end content'
+      },
+    },
+  ],
+};
+
+```
+
+### 4. Declare Node
+
+Declare node can be used to determine the type and rendering method of the node
+
+```tsx pure title="node-registries.tsx"
+import { FlowNodeRegistry, ValidateTrigger } from '@flowgram.ai/fixed-layout-editor';
+
+/**
+ * Custom node registration
+ */
+export const nodeRegistries: FlowNodeRegistry[] = [
+  {
+    /**
+     * Custom node type
+     */
+    type: 'condition',
+    /**
+     * Custom node extension:
+     *  - loop: Extended to loop node
+     *  - start: Extended to start node
+     *  - dynamicSplit: Extended to branch node
+     *  - end: Extended to end node
+     *  - tryCatch: Extended to tryCatch node
+     *  - default: Extended to normal node (default)
+     */
+    extend: 'dynamicSplit',
+    /**
+     * Node configuration information
+     */
+    meta: {
+      // isStart: false, // Whether it is a start node
+      // isNodeEnd: false, // Whether it is an end node, the node after the end node cannot be added
+      // draggable: false, // Whether it can be dragged, such as the start node and the end node cannot be dragged
+      // selectable: false, // The trigger start node cannot be selected
+      // deleteDisable: true, // Disable deletion
+      // copyDisable: true, // Disable copy
+      // addDisable: true, // Disable addition
+    },
+    /**
+     * Configure node form validation and rendering,
+     * Note: validate uses data and rendering separation, ensuring that even if the node is not rendered, the data can be validated
+     */
+    formMeta: {
+      validateTrigger: ValidateTrigger.onChange,
+      validate: {
+        title: ({ value }) => (value ? undefined : 'Title is required'),
+      },
+      /**
+       * Render form
+       */
+      render: () => (
+       <>
+          <Field name="title">
+            {({ field }) => <div className="demo-free-node-title">{field.value}</div>}
+          </Field>
+          <Field name="content">
+            {({ field }) => <input onChange={field.onChange} value={field.value}/>}
+          </Field>
+        </>
+      )
+    },
+  },
+];
+
+```
+### 5. Render Node
+
+The rendering node is used to add styles, events, and form rendering positions
+
+```tsx pure title="base-node.tsx"
+import { useNodeRender } from '@flowgram.ai/fixed-layout-editor';
+
+export const BaseNode = () => {
+  /**
+   * Provides methods related to node rendering
+   */
+  const nodeRender = useNodeRender();
+  /**
+   * Forms can only be used when the node engine is enabled
+   */
+  const form = nodeRender.form;
+
+  return (
+    <div
+      className="demo-fixed-node"
+      onMouseEnter={nodeRender.onMouseEnter}
+      onMouseLeave={nodeRender.onMouseLeave}
+      onMouseDown={e => {
+        // Trigger drag
+        nodeRender.startDrag(e);
+        e.stopPropagation();
+      }}
+      style={{
+        // BlockOrderIcon represents the first node of a branch, BlockIcon represents the header node of the entire condition
+        ...(nodeRender.isBlockOrderIcon || nodeRender.isBlockIcon ? { width: 260 } : {}),
+        outline: form?.state.invalid ? '1px solid red' : 'none', // Red border for form validation errors
+      }}
+    >
+      {
+        // Form rendering is generated through formMeta
+        form?.render()
+      }
+    </div>
+  );
+};
+
+```
+
+
+### 6. Add Tools
+
+Tools are mainly used to control canvas zooming and other operations. Tools are consolidated in `usePlaygroundTools`, while `useClientContext` is used to get the canvas context, which contains core modules such as `history`
+
+```tsx pure title="tools.tsx"
+import { useEffect, useState } from 'react'
+import { usePlaygroundTools, useClientContext } from '@flowgram.ai/fixed-layout-editor';
+
+export function Tools() {
+  const { history } = useClientContext();
+  const tools = usePlaygroundTools();
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
+
+  useEffect(() => {
+    const disposable = history.undoRedoService.onChange(() => {
+      setCanUndo(history.canUndo());
+      setCanRedo(history.canRedo());
+    });
+    return () => disposable.dispose();
+  }, [history]);
+
+  return <div style={{ position: 'absolute', zIndex: 10, bottom: 16, left: 16, display: 'flex', gap: 8 }}>
+    <button onClick={() => tools.zoomin()}>ZoomIn</button>
+    <button onClick={() => tools.zoomout()}>ZoomOut</button>
+    <button onClick={() => tools.fitView()}>Fitview</button>
+    <button onClick={() => tools.changeLayout()}>ChangeLayout</button>
+    <button onClick={() => history.undo()} disabled={!canUndo}>Undo</button>
+    <button onClick={() => history.redo()} disabled={!canRedo}>Redo</button>
+    <span>{Math.floor(tools.zoom * 100)}%</span>
+  </div>
+}
+
+```
+### 7. Effect
+
+import { FixedLayoutSimple } from '../../../../components';
+
+<div style={{ position: 'relative', width: '100%', height: '600px'}}>
+  <FixedLayoutSimple />
+</div>

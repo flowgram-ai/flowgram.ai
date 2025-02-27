@@ -1,0 +1,7 @@
+# 文件路径与代码负责人分配
+# 对整个仓库设置代码负责人
+* @xukai.luics @wencheng.lwc
+
+# 对特定目录设置代码负责人
+/common/ @wencheng.lwc @chenjiawei.inizio
+/config/ @wencheng.lwc @chenjiawei.inizio

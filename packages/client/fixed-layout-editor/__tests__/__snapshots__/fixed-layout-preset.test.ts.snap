@@ -1,0 +1,16 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`fixed-layout-preset > nodeEngine(v2) toJSON 1`] = `
+{
+  "nodes": [
+    {
+      "blocks": [],
+      "data": {
+        "title": "noop title2",
+      },
+      "id": "noop_0",
+      "type": "noop",
+    },
+  ],
+}
+`;

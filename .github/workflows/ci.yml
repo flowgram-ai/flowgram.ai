@@ -1,0 +1,32 @@
+name: CI
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+      - name: Config Git User
+        run: |
+          git config --local user.name "chenjiawei.inizio"
+          git config --local user.email "chenjiawei.inizio@bytedance.com"
+      - name: For Debug
+        run: |
+          echo "Listing files in the root directory:"
+          ls -alh
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - name: Verify Change Logs
+        run: node common/scripts/install-run-rush.js change --verify
+      - name: Rush Install
+        run: node common/scripts/install-run-rush.js install
+      - name: Rush build
+        run: node common/scripts/install-run-rush.js build
+      - name: Test (coverage)
+        run: node common/scripts/install-run-rush.js test:cov

@@ -1,0 +1,189 @@
+# 常见问题
+## 为什么不用 ReactFlow
+- ReactFlow 不做数据建模，不提供布局算法，只做渲染，开发复杂人力成本依然很高
+见：https://reactflow.dev/examples/nodes/custom-node
+- ReactFlow的交互的定制成本高，如下，在画布缩放很小时候无法选到点位，也不支持拖拽重连线条
+<table>
+  <tr>
+    <td><img src="@/public/reactflow/reactflow-render.gif"/></td>
+    <td><img src="@/public/reactflow/reactflow-interaction.gif"/></td>
+  </tr>
+</table>
+
+## ReactFlow 付费案例
+
+| 付费功能                         | FlowGramAI 是否支持 | 未来计划支持 |
+|----------------------------------|------------------------|--------------|
+| 分组                             | 支持                   |              |
+| redo/undo                        | 支持                   |              |
+| copy/paste                       | 支持                   |              |
+| HelpLines 辅助线                | 支持                   |              |
+| 自定义节点及形状                 | 支持                   |              |
+| 自定义线条                       | 支持                   |              |
+| AutoLayout，自动布局整理         | 支持                   |              |
+| ForceLayout，节点排斥效果        | 不支持                 | No           |
+| Expand/Collapse                  | 支持                   |              |
+| Collaborative 多人协同           | 不支持                 | Yes          |
+| WorkflowBuilder 相当于自动化布局完整案例 | 支持                   |              |
+
+## 为什么需要 IOC
+
+:::tip 几个概念：
+- 控制反转： Inversion of Control， 是面向对象中的一种设计原则，可以用来降低代码模块之间的耦合度，其中最常见的方式叫做依赖注入（Dependency Injection，简称DI）
+- 领域逻辑：Domain Logic，也可以叫 业务逻辑（Business Logic），这些业务逻辑与特定的产品功能相关
+- 面向切面编程：AOP （Aspect-Oriented Programming），最核心的设计原则是将软件系统拆分为公用逻辑 (横切，有贯穿的意味) 和 领域逻辑 （纵切）的多个个方面 (Aspect)，横切部分可以被所有的 纵切 部分 “按需消费”
+
+:::
+
+回答这个问题之前先了解切面编程，切面编程目的是将领域逻辑的粒度拆的更细，横切部分可被纵切 “按需消费” ，横切和纵切的连接也叫 织入 (Weaving)，而 IOC 就是扮演 Weaving 注入到纵切的角色
+
+
+![切面编程](@/public/weaving.png)
+
+理想的切面编程
+
+```ts
+- myAppliation 提供业务逻辑
+  - service 特定的业务逻辑服务
+     - customDomainLogicService
+  - contributionImplement 钩子的注册实例化
+    - MyApplicationContributionImpl
+  - component 业务组件
+
+- core 提供通用逻辑
+  - model 通用模型
+  - contribution 钩子接口
+     - LifecycleContribution 应用的生命周期
+     - CommandContribution
+  - service 公用的service的服务
+     - CommandService
+     - ClipboardService
+  - component 公用的组件
+  ```
+
+  ```ts
+  // IOC 的注入
+@injectable()
+export class CustomDomainLogicService {
+  @inject(FlowContextService) protected flowContextService: FlowContextService;
+  @inject(CommandService) protected commandService: CommandService;
+  @inject(SelectionService) protected selectionService: SelectionService;
+}
+// IOC 的接口声明
+interface LifecycleContribution {
+   onInit(): void
+   onStart(): void
+   onDispose(): void
+}
+// IOC 的接口实现
+@injectable()
+export class MyApplicationContributionImpl implement LifecycleContribution {
+    onStart(): void {
+      // 特定的业务逻辑代码
+    }
+}
+
+// 手动挂在到生命周期钩子
+bind(LifecycleContribution).toService(MyApplicationContributionImpl)
+```
+
+
+:::warning IOC是切面编程的一种手段，引入后，底层模块可以以接口形式暴露给外部注册，带来的好处：
+- 实现微内核 + 插件化的设计，实现插件的可插拔按需消费
+- 可以让包拆得更干净，实现 feature 式的拆包
+
+:::
+
+## 为什么需要 ECS
+
+:::warning ECS （Entity-Component-System）
+适合解耦大的数据对象，常用于游戏，游戏的每个角色（Entity）数据都非常庞大，需要拆分成如物理引擎相关数据、皮肤相关、角色属性等 (多个 Component)，供不同的子系统（System）消费。流程的数据结构复杂，很适合用ECS做拆解
+
+:::
+
+![ECS](./assets/ecs.png)
+
+ReduxStore 伪代码
+```jsx pure
+const store = () => ({
+  nodes: [{
+    position: any
+    form: any
+    data3: any
+
+  }],
+  edges: []
+})
+
+function Playground() {
+  const { nodes } = useStore(store)
+
+  return nodes.map(node => <Node data={node} />)
+}
+```
+优点：
+- 中心化数据管理使用简单
+
+缺点：
+- 中心化数据管理无法精确更新，带来性能瓶颈
+- 扩展性差，节点新增一个数据，都耦合到一个 大JSON 里
+
+ECS 方案
+备注：
+- NodeData 对应的是 ECS - Component
+- Layer 对应 ECS - System
+```jsx pure
+class FlowDocument {
+dataDefines: [
+  NodePositionData,
+  NodeFormData,
+  NodeLineData
+]
+nodeEntities: Entity[] = []
+}
+
+
+class Entity {
+id: string // 只有id 不带数据
+getData: (dataId: string) => EntityData
+}
+
+// 渲染线条
+class LinesLayer {
+@observeEntityData(NodeLineData) lines
+render() {
+  return lines.map(line => <Line data={line} />)
+}
+}
+
+// 渲染节点位置
+class NodePositionsLayer {
+@observeEntityData(NodePositionData) positions
+return() {
+
+}
+}
+
+// 渲染节点表单
+class  NodeFormsLayer {
+  @observeEntityData(NodeFormData) contents
+return() {}
+}
+
+class Playground {
+layers: [
+  LinesLayer, // 线条渲染
+  NodePositionsLayer, // 位置渲染
+  NodeFormsLayer // 内容渲染
+]，
+render() {
+  return this.layers.map(layer => layer.render())
+}
+}
+```
+优点：
+- 节点数据拆开来单独控制渲染，性能可做到精确更新
+- 扩展性强，新增一个节点数据，则新增一个 XXXData + XXXLayer
+
+缺点：
+- 有一定学习成本

@@ -1,0 +1,13 @@
+[
+  "form",
+  "variable",
+  "history",
+  "lines",
+  "custom-service",
+  "custom-plugin",
+  {
+    "type": "dir",
+    "name": "interactive",
+    "label": "交互"
+  }
+]

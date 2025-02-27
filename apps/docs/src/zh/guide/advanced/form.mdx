@@ -1,0 +1,509 @@
+# 表单的使用
+
+## 配置
+
+### 开启节点引擎
+
+需要开启节点引擎才能使用
+
+```tsx pure title="use-editor-props.ts"
+
+// EditorProps
+{
+  nodeEngine: {
+    /**
+     * 需要开启节点引擎才能使用
+     */
+    enable: true
+    /**
+     * 节点内部报错的渲染组件
+     */
+    nodeErrorRender?: NodeErrorRender;
+    /**
+     * 节点无内容时的渲染组件
+     */
+    nodePlaceholderRender?: NodePlaceholderRender;
+  }
+}
+```
+
+### 节点配置 formMeta
+
+```tsx pure title="node-registries.ts"
+import { FlowNodeRegistry, ValidateTrigger } from '@flowgram.ai/fixed-layout-editor';
+
+export const nodeRegistries: FlowNodeRegistry[] = [
+  {
+    type: 'start',
+    /**
+     * 配置节点表单的校验及渲染
+     */
+    formMeta: {
+      validateTrigger: ValidateTrigger.onChange,
+      validate: {
+        content: ({ value }) => (value ? undefined : 'Content is required'),
+      },
+      /**
+       * Render form
+       */
+      render: () => (
+       <>
+          <Field<string> name="title">
+            {({ field }) => <div className="demo-free-node-title">{field.value}</div>}
+          </Field>
+          <Field<string> name="content">
+            {({ field, fieldState }) => (
+              <>
+                <input onChange={field.onChange} value={field.value}/>
+                {fieldState?.invalid && <Feedback errors={fieldState?.errors}/>}
+              </>
+            )}
+          </Field>
+        </>
+      )
+    },
+  }
+]
+
+```
+
+### 节点渲染添加表单
+
+```tsx pure title="base-node.tsx"
+
+export const BaseNode = () => {
+  /**
+   * 提供节点渲染相关的方法
+   */
+  const { form } = useNodeRender()
+  return (
+    <div className="demo-free-node" className={form?.state.invalid && "error"}>
+      {
+        // 表单渲染通过 formMeta 生成
+        form?.render()
+      }
+    </div>
+  )
+};
+
+```
+
+## Field
+
+Field 的渲染部分，支持三种写法，如下:
+
+:::note `renderProps` 参数
+
+- field
+- fieldState
+- formState
+
+:::
+
+```tsx pure
+const render = () => (
+  <div>
+    <Label> 1. 通过 children </Label>
+    // 该方式适用于简单场景，Field 会将  value onChange 等属性直接注入第一层children组件中
+    <Field name="c">
+      <Input />
+    </Field>
+    <Label> 2. 通过 Render Props  </Label>
+    // 该方式适用于复杂场景，当 return 的组件存在多层嵌套，用户可以主动将field 中的属性注入希望注入的组件中
+    <Field name="a">
+        {({ field, fieldState, formState }: FieldRenderProps<string>) => <div><Input {...field} /><Feedbacks errors={fieldState.errors}/></div>}
+    </Field>
+
+    <Label> 3. 通过传 render 函数</Label>
+    // 该方式类似方式2，但通过props 传入
+    <Field name="b" render={({ field }: FieldRenderProps<string>) => <Input {...field} />} />
+  </div>
+);
+```
+
+
+## FiledArray
+
+以下例子展示：
+1. 数组的写法
+2. 数组项的校验如何配置
+3. 数组项错误的展示
+
+<div className="rs-center" >
+  <img src="@/public/field-array.gif"  style={{ maxWidth: 600 }}/>
+</div>
+
+```tsx pure
+import {
+  Field,
+  FieldArray,
+  FieldArrayRenderProps,
+  FieldRenderProps,
+  FormMeta,
+  FormRenderProps,
+  ValidateTrigger,
+} from '@flowgram.ai/fixed-layout-editor';
+import Label from '@douyinfe/semi-ui/lib/es/form/label';
+import { Button, Input } from '@douyinfe/semi-ui';
+
+import { Feedback } from '../components/feedback';
+
+interface FormData {
+  arr: string[];
+}
+
+export const renderNodeWithArray = ({ form }: FormRenderProps<FormData>) => (
+  <>
+    <Label> My array </Label>
+    <FieldArray name="arr">
+      {({ field }: FieldArrayRenderProps<string>) => (
+        <>
+          {field.map((child, index) => (
+            <div key={child.key} className="array-item-wrapper">
+              <Field name={child.name}>
+                {({ field: childField, fieldState: childState }: FieldRenderProps<string>) => (
+                  <div>
+                    <Input {...childField} /> <Feedback errors={childState?.errors} />
+                  </div>
+                )}
+              </Field>
+              <Button style={{ marginLeft: 8 }} onClick={() => field.delete(index)}>
+                del
+              </Button>
+            </div>
+          ))}
+          <div>
+            <Button
+              style={{ marginTop: 8, width: 200 }}
+              onClick={() => field.append('default value')}
+            >
+              Add
+            </Button>
+          </div>
+        </>
+      )}
+    </FieldArray>
+  </>
+);
+
+export const arrayMeta: FormMeta = {
+  render: renderNodeWithArray,
+  validateTrigger: ValidateTrigger.onChange,
+  // 校验map 中的name 支持模糊匹配
+  validate: {
+    ['arr.*']: () => 'array item error',
+  },
+};
+```
+
+## 校验
+
+### 校验配置
+
+校验逻辑配置在全局，通过表单项路径声明校验逻辑
+
+<div className="rs-center" >
+  <img src="@/public/form-validate.gif"  style={{ maxWidth: 600 }}/>
+</div>
+
+```tsx pure
+export const renderValidateExample = ({ form }: FormRenderProps<FormData>) => (
+  <>
+    <Label> a (最大长度为 5)</Label>
+    <Field name="a">
+      {({ field: { value, onChange }, fieldState }: FieldRenderProps<string>) => (
+        <>
+          <Input value={value} onChange={onChange} />
+          <Feedback errors={fieldState?.errors} />
+        </>
+      )}
+    </Field>
+    <Label> b (如果a存在，b可以选填) </Label>
+    <Field
+      name="b"
+      render={({ field: { value, onChange }, fieldState }: FieldRenderProps<string>) => (
+        <>
+          <Input value={value} onChange={onChange} />
+          <Feedback errors={fieldState?.errors} />
+        </>
+  )}
+/>
+  </>
+);
+
+export const VALIDATE_EXAMPLE: FormMeta = {
+  render: renderValidateExample,
+  // 校验时机配置
+  validateTrigger: ValidateTrigger.onChange,
+  validate: {
+    // 单纯校验值
+    a: ({ value }) => (value.length > 5 ? '最大长度为5' : undefined),
+    // 校验依赖其他表单项的值
+    b: ({ value, formValues }) => {
+      if (formValues.a) {
+        return undefined;
+      } else {
+        return value ? 'undefined' : 'a 存在时 b 必填';
+      }
+    },
+    // 校验依赖节点或画布信息
+    c: ({ value, formValues, context }) => {
+      const { node， playgroundContext } = context;
+      // 此处逻辑省略
+    },
+  },
+};
+```
+### 校验时机
+
+<table className="rs-table">
+  <tr>
+    <td>`ValidateTrigger.onChange`</td>
+    <td>表单数据变更时校验（不包含初始化数据）</td>
+  </tr>
+  <tr>
+    <td>`ValidateTrigger.onBlur`</td>
+    <td>表单项输入控件onBlur时校验</td>
+  </tr>
+</table>
+
+### 路径模糊匹配
+
+校验配置的路径（即key）支持模糊匹配， 通常用于数组场景，见以下例子
+
+<div className="rs-red">
+  注意：* 仅代表下钻一级
+</div>
+
+<table className="rs-table">
+  <tr>
+    <td>`arr.*`</td>
+    <td>`arr` 字段下的所有一级子项</td>
+  </tr>
+  <tr>
+    <td>`arr.x.*`</td>
+    <td>`arr.x` 下的所有一级子项</td>
+  </tr>
+  <tr>
+    <td>`arr.*.x`</td>
+    <td>`arr` 下的所有一级子项下的子项 `x`</td>
+  </tr>
+</table>
+
+## 副作用 (effect)
+
+### 副作用配置
+
+以下例子展示：
+
+- 普通字段如何配置effect
+- 数组字段在以下事件如何配置effect
+- onValueChange
+- onValueInit
+- onArrayAppend
+- onArrayDelete
+
+<div className="rs-center" >
+  <img src="@/public/form-effect.gif"  style={{ maxWidth: 600 }}/>
+</div>
+
+```tsx pure
+import * as React from 'react';
+
+import {
+  ArrayAppendEffect,
+  ArrayDeleteEffect,
+  createEffectOptions,
+  DataEvent,
+  Effect,
+  Field,
+  FieldArray,
+  FieldArrayRenderProps,
+  FieldRenderProps,
+  FormMeta,
+  FormRenderProps,
+  ValidateTrigger,
+} from '@flowgram.ai/fixed-layout-editor';
+import Label from '@douyinfe/semi-ui/lib/es/form/label';
+import { Button, Input } from '@douyinfe/semi-ui';
+
+import { Feedback } from '../components/feedback';
+
+interface FormData {
+  a: string;
+  arr: string[];
+}
+
+export const renderEffectExample = ({ form }: FormRenderProps<FormData>) => (
+  <>
+    <Label> a </Label>
+    <Field name="a">
+      {({ field: { value, onChange }, fieldState }: FieldRenderProps<string>) => (
+        <>
+          <Input value={value} onChange={onChange} />
+          <Feedback errors={fieldState?.errors} />
+        </>
+      )}
+    </Field>
+    <Label> My array </Label>
+    <FieldArray name="arr">
+      {({ field }: FieldArrayRenderProps<string>) => (
+        <>
+          {field.map((child, index) => (
+            <div key={child.key} className="array-item-wrapper">
+              <Field name={child.name}>
+                {({ field: childField, fieldState: childState }: FieldRenderProps<string>) => (
+                  <div>
+                    <Input {...childField} /> <Feedback errors={childState?.errors} />
+                  </div>
+                )}
+              </Field>
+              <Button style={{ marginLeft: 8 }} onClick={() => field.delete(index)}>
+                del
+              </Button>
+            </div>
+          ))}
+          <div>
+            <Button
+              style={{ marginTop: 8, width: 200 }}
+              onClick={() => field.append('default value')}
+            >
+              Add
+            </Button>
+          </div>
+        </>
+      )}
+    </FieldArray>
+  </>
+);
+
+export const EFFECT_V2: FormMeta = {
+  render: renderEffectExample,
+  // effect 配置是一个key 为表单项路径，value 为effect配置的map
+  effect: {
+    a: [
+      createEffectOptions<Effect>(DataEvent.onValueChange, ({ value, prevValue }) => {
+        console.log(`a changed: current: ${value} prev:${prevValue}`);
+      }),
+    ],
+    arr: [
+      createEffectOptions<ArrayAppendEffect>(DataEvent.onArrayAppend, ({ value, index }) => {
+        console.log(`arr appended: value=${value}, index=${index}`);
+      }),
+      createEffectOptions<ArrayDeleteEffect>(DataEvent.onArrayDelete, ({ index }) => {
+        console.log(`arr deleted: index=${index}`);
+      }),
+    ],
+    ['arr.*']: [
+      createEffectOptions<Effect>(DataEvent.onValueChange, ({ value, prevValue }) => {
+        console.log(`arr item value changed: current: ${value} prev:${prevValue}`);
+      }),
+    ],
+  },
+};
+```
+### 副作用 Event
+
+```ts pure
+export enum DataEvent {
+  /* 当值相较于初始值，或前一个值发生变更时触发 */
+  onValueChange = 'onValueChange',
+  /**
+   * 当初始值设置时触发，触发场景有
+   * - 表单配置了defaultValue, 在表单初始化时会触发
+   * - 某表单项配置了defaultValue, 且该表单项初始化时无值，此时会设置defaultValue 并触发
+   */
+  onValueInit = 'onValueInit',
+  /**
+   * 无论是变更值还是设置初始值都会触发，可以认为是 onValueChange onValueInit 的并集
+   */
+  onValueInitOrChange = 'onValueInitOrChange',
+  /* 不建议使用，该事件依赖FieldArray渲染， 在不渲染情况下可能到值事件不触发 */
+  onArrayAppend = 'onArrayAppend',
+  /* 不建议使用，该事件依赖FieldArray渲染， 在不渲染情况下可能到值事件不触发 */
+  onArrayDelete = 'onArrayDelete',
+}
+```
+
+### API
+
+```ts pure
+// onValueChange 和 onValueInit 的effect 都遵循该接口
+export type Effect<TFieldValue = any, TFormValues = any> = (props: {
+  value?: TFieldValue;
+  prevValue?: TFieldValue;
+  formValues?: TFormValues;
+  context?: NodeContext;
+}) => void;
+
+export type ArrayAppendEffect<TFieldValue = any, TFormValues = any> = (props: {
+  index?: number;
+  value?: TFieldValue;
+  arrayValues?: Array<TFieldValue>;
+  formValues?: TFormValues;
+  context?: NodeContext;
+}) => void;
+
+export type ArrayDeleteEffect<TFieldValue = any, TFormValues = any> = (props: {
+  index: number;
+  arrayValue?: Array<TFieldValue>;
+  formValues?: TFormValues;
+  context?: NodeContext;
+}) => void;
+```
+
+## 联动
+
+通过 deps 声明依赖
+
+```tsx pure
+import * as React from 'react';
+
+import {
+  Field,
+  FieldRenderProps,
+  FormMeta,
+  FormRenderProps,
+} from '@flowgram.ai/fixed-layout-editor';
+import Label from '@douyinfe/semi-ui/lib/es/form/label';
+import { Input, Switch } from '@douyinfe/semi-ui';
+
+interface FormData {
+  isBatch: boolean;
+  batch: string;
+}
+
+export const renderDynamicExample = ({ form }: FormRenderProps<FormData>) => (
+  <>
+    <div>
+      <Label> is Batch ? </Label>
+      <Field name="isBatch">
+        {({ field: { value, onChange } }: FieldRenderProps<boolean>) => (
+          <>
+            <Switch checked={value} onChange={onChange} size={'small'} />
+          </>
+        )}
+      </Field>
+    </div>
+    <Field
+      name="batch"
+      render={({ field }: FieldRenderProps<string>) =>
+        form.values?.isBatch ? (
+          <>
+            <Label> batch </Label>
+            <Input {...field} />
+          </>
+        ) : (
+          <></>
+        )
+      }
+      通过 deps 配置，该表单项的渲染依赖哪些其他表单项的值
+      deps={['isBatch']}
+    />
+  </>
+);
+
+export const DYNAMIC_V2: FormMeta = {
+  render: renderDynamicExample,
+};
+```

@@ -1,0 +1,22 @@
+[
+  {
+    "text": "Guide",
+    "link": "/guide/introduction",
+    "activeMatch": "/guide/introduction"
+  },
+  {
+    "text": "Examples",
+    "link": "/examples/",
+    "activeMatch": "/examples/"
+  },
+  {
+    "text": "Common APIs",
+    "link": "/api/",
+    "activeMatch": "/api/"
+  },
+  {
+    "text": "API Documentation",
+    "link": "/auto-docs/",
+    "activeMatch": "/auto-docs/"
+  }
+]

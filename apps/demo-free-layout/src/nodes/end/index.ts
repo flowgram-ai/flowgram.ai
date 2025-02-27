@@ -1,0 +1,27 @@
+import { FlowNodeRegistry } from '../../typings';
+import iconEnd from '../../assets/icon-end.jpg';
+import { formMeta } from './form-meta';
+
+export const EndNodeRegistry: FlowNodeRegistry = {
+  type: 'end',
+  meta: {
+    deleteDisable: true,
+    copyDisable: true,
+    defaultPorts: [{ type: 'input' }],
+  },
+  info: {
+    icon: iconEnd,
+    description:
+      'The final node of the workflow, used to return the result information after the workflow is run.',
+  },
+  /**
+   * Render node via formMeta
+   */
+  formMeta,
+  /**
+   * End Node cannot be added
+   */
+  canAdd() {
+    return false;
+  },
+};

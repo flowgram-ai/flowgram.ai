@@ -1,0 +1,22 @@
+{
+  "name": "@flowgram.ai/ts-config",
+  "version": "0.1.0",
+  "description": "",
+  "keywords": [],
+  "license": "ISC",
+  "author": "chenjiawei.inizio@bytedance.com",
+  "scripts": {
+    "build": "exit",
+    "test": "exit",
+    "lint": "exit",
+    "test:cov": "exit 0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.4",
+    "eslint": "^8.54.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  }
+}

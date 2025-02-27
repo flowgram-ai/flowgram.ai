@@ -1,0 +1,511 @@
+# Form
+
+## Config
+
+### Enable Node Engine
+
+Node engine is required to use form
+
+```tsx pure title="use-editor-props.ts"
+
+// EditorProps
+{
+  nodeEngine: {
+    /**
+     * Node engine is required to use form
+     */
+    enable: true
+    /**
+     * The component to render when the node has an error
+     */
+    nodeErrorRender?: NodeErrorRender;
+    /**
+     * The component to render when the node has no content
+     */
+    nodePlaceholderRender?: NodePlaceholderRender;
+  }
+}
+```
+
+### Node Configuration formMeta
+
+```tsx pure title="node-registries.ts"
+import { FlowNodeRegistry, ValidateTrigger } from '@flowgram.ai/fixed-layout-editor';
+
+export const nodeRegistries: FlowNodeRegistry[] = [
+  {
+    type: 'start',
+    /**
+     * Configure the validation and rendering of the node form
+     */
+    formMeta: {
+      validateTrigger: ValidateTrigger.onChange,
+      validate: {
+        content: ({ value }) => (value ? undefined : 'Content is required'),
+      },
+      /**
+       * Render form
+       */
+      render: () => (
+       <>
+          <Field<string> name="title">
+            {({ field }) => <div className="demo-free-node-title">{field.value}</div>}
+          </Field>
+          <Field<string> name="content">
+            {({ field, fieldState }) => (
+              <>
+                <input onChange={field.onChange} value={field.value}/>
+                {fieldState?.invalid && <Feedback errors={fieldState?.errors}/>}
+              </>
+            )}
+          </Field>
+        </>
+      )
+    },
+  }
+]
+
+```
+
+### Add form to node rendering
+
+```tsx pure title="base-node.tsx"
+
+export const BaseNode = () => {
+  /**
+   * Provide methods related to node rendering
+   */
+  const { form } = useNodeRender()
+  return (
+    <div className="demo-free-node" className={form?.state.invalid && "error"}>
+      {
+        // The form is rendered through formMeta
+        form?.render()
+      }
+    </div>
+  )
+};
+
+```
+
+## Field
+
+The rendering part of Field, supports three writing methods, as follows:
+
+:::note `renderProps` parameter
+
+- field
+- fieldState
+- formState
+
+:::
+
+```tsx pure
+const render = () => (
+  <div>
+    <Label> 1. Through children </Label>
+    // This method is suitable for simple scenarios, Field will inject value onChange, etc. directly into the first layer of children components
+    <Field name="c">
+      <Input />
+    </Field>
+    <Label> 2. Through Render Props  </Label>
+    // This method is suitable for complex scenarios, when the returned component has multiple layers of nesting, the user can actively inject the attributes of field into the desired component
+    <Field name="a">
+        {({ field, fieldState, formState }: FieldRenderProps<string>) => <div><Input {...field} /><Feedbacks errors={fieldState.errors}/></div>}
+    </Field>
+
+    <Label> 3. Through render function </Label>
+    // This method is similar to method 2, but the props are passed in
+    <Field name="b" render={({ field }: FieldRenderProps<string>) => <Input {...field} />} />
+  </div>
+);
+```
+
+
+## FiledArray
+
+The following example shows:
+1. The writing method of the array
+2. How to configure the validation of the array item
+3. How to display the error of the array item
+
+<div className="rs-center" >
+  <img src="@/public/field-array.gif"  style={{ maxWidth: 600 }}/>
+</div>
+
+```tsx pure
+import {
+  Field,
+  FieldArray,
+  FieldArrayRenderProps,
+  FieldRenderProps,
+  FormMeta,
+  FormRenderProps,
+  ValidateTrigger,
+} from '@flowgram.ai/fixed-layout-editor';
+import Label from '@douyinfe/semi-ui/lib/es/form/label';
+import { Button, Input } from '@douyinfe/semi-ui';
+
+import { Feedback } from '../components/feedback';
+
+interface FormData {
+  arr: string[];
+}
+
+export const renderNodeWithArray = ({ form }: FormRenderProps<FormData>) => (
+  <>
+    <Label> My array </Label>
+    <FieldArray name="arr">
+      {({ field }: FieldArrayRenderProps<string>) => (
+        <>
+          {field.map((child, index) => (
+            <div key={child.key} className="array-item-wrapper">
+              <Field name={child.name}>
+                {({ field: childField, fieldState: childState }: FieldRenderProps<string>) => (
+                  <div>
+                    <Input {...childField} /> <Feedback errors={childState?.errors} />
+                  </div>
+                )}
+              </Field>
+              <Button style={{ marginLeft: 8 }} onClick={() => field.delete(index)}>
+                del
+              </Button>
+            </div>
+          ))}
+          <div>
+            <Button
+              style={{ marginTop: 8, width: 200 }}
+              onClick={() => field.append('default value')}
+            >
+              Add
+            </Button>
+          </div>
+        </>
+      )}
+    </FieldArray>
+  </>
+);
+
+export const arrayMeta: FormMeta = {
+  render: renderNodeWithArray,
+  validateTrigger: ValidateTrigger.onChange,
+  // The name in the validate map supports fuzzy matching
+  validate: {
+    ['arr.*']: () => 'array item error',
+  },
+};
+```
+
+## Validation
+
+### Validation Configuration
+
+Validation logic is configured globally, and the validation logic is declared by the form item path
+
+<div className="rs-center" >
+  <img src="@/public/form-validate.gif"  style={{ maxWidth: 600 }}/>
+</div>
+
+```tsx pure
+export const renderValidateExample = ({ form }: FormRenderProps<FormData>) => (
+  <>
+    <Label> a (Maximum length is 5)</Label>
+    <Field name="a">
+      {({ field: { value, onChange }, fieldState }: FieldRenderProps<string>) => (
+        <>
+          <Input value={value} onChange={onChange} />
+          <Feedback errors={fieldState?.errors} />
+        </>
+      )}
+    </Field>
+    <Label> b (If a exists, b can be optional) </Label>
+    <Field
+      name="b"
+      render={({ field: { value, onChange }, fieldState }: FieldRenderProps<string>) => (
+        <>
+          <Input value={value} onChange={onChange} />
+          <Feedback errors={fieldState?.errors} />
+        </>
+  )}
+/>
+  </>
+);
+
+export const VALIDATE_EXAMPLE: FormMeta = {
+  render: renderValidateExample,
+  // Validation timing configuration
+  validateTrigger: ValidateTrigger.onChange,
+  validate: {
+    // Simply validate the value
+    a: ({ value }) => (value.length > 5 ? 'Maximum length is 5' : undefined),
+    // Validate the value depends on the value of other form items
+    b: ({ value, formValues }) => {
+      if (formValues.a) {
+        return undefined;
+      } else {
+        return value ? 'undefined' : 'a exists when b is required';
+      }
+    },
+    // Validate the value depends on the node or canvas information
+    c: ({ value, formValues, context }) => {
+      const { node， playgroundContext } = context;
+      // The logic is omitted here
+    },
+  },
+};
+```
+### Validation Timing
+
+<table className="rs-table">
+  <tr>
+    <td>`ValidateTrigger.onChange`</td>
+    <td>Validate when the form data changes (does not include initial data)</td>
+  </tr>
+  <tr>
+    <td>`ValidateTrigger.onBlur`</td>
+    <td>Validate when the form item input control is onBlur</td>
+  </tr>
+</table>
+
+### Path Fuzzy Matching
+
+The path (key) of the validation configuration supports fuzzy matching, which is usually used in the array scenario, see the following example
+
+<div className="rs-red">
+  Note: * represents only one level of drilling down
+</div>
+
+<table className="rs-table">
+  <tr>
+    <td>`arr.*`</td>
+    <td>`arr` field's all first-level sub-items</td>
+  </tr>
+  <tr>
+    <td>`arr.x.*`</td>
+    <td>`arr.x` all first-level sub-items</td>
+  </tr>
+  <tr>
+    <td>`arr.*.x`</td>
+    <td>`arr` all first-level sub-items' sub-items `x`</td>
+  </tr>
+</table>
+
+## Side Effects (effect)
+
+### Side Effects Configuration
+
+The following example shows:
+
+- How to configure the effect of a normal field
+- How to configure the effect of an array field on the following events
+- onValueChange
+- onValueInit
+- onArrayAppend
+- onArrayDelete
+
+<div className="rs-center" >
+  <img src="@/public/form-effect.gif"  style={{ maxWidth: 600 }}/>
+</div>
+
+```tsx pure
+import * as React from 'react';
+
+import {
+  ArrayAppendEffect,
+  ArrayDeleteEffect,
+  createEffectOptions,
+  DataEvent,
+  Effect,
+  Field,
+  FieldArray,
+  FieldArrayRenderProps,
+  FieldRenderProps,
+  FormMeta,
+  FormRenderProps,
+  ValidateTrigger,
+} from '@flowgram.ai/fixed-layout-editor';
+import Label from '@douyinfe/semi-ui/lib/es/form/label';
+import { Button, Input } from '@douyinfe/semi-ui';
+
+import { Feedback } from '../components/feedback';
+
+interface FormData {
+  a: string;
+  arr: string[];
+}
+
+export const renderEffectExample = ({ form }: FormRenderProps<FormData>) => (
+  <>
+    <Label> a </Label>
+    <Field name="a">
+      {({ field: { value, onChange }, fieldState }: FieldRenderProps<string>) => (
+        <>
+          <Input value={value} onChange={onChange} />
+          <Feedback errors={fieldState?.errors} />
+        </>
+      )}
+    </Field>
+    <Label> My array </Label>
+    <FieldArray name="arr">
+      {({ field }: FieldArrayRenderProps<string>) => (
+        <>
+          {field.map((child, index) => (
+            <div key={child.key} className="array-item-wrapper">
+              <Field name={child.name}>
+                {({ field: childField, fieldState: childState }: FieldRenderProps<string>) => (
+                  <div>
+                    <Input {...childField} /> <Feedback errors={childState?.errors} />
+                  </div>
+                )}
+              </Field>
+              <Button style={{ marginLeft: 8 }} onClick={() => field.delete(index)}>
+                del
+              </Button>
+            </div>
+          ))}
+          <div>
+            <Button
+              style={{ marginTop: 8, width: 200 }}
+              onClick={() => field.append('default value')}
+            >
+              Add
+            </Button>
+          </div>
+        </>
+      )}
+    </FieldArray>
+  </>
+);
+
+export const EFFECT_V2: FormMeta = {
+  render: renderEffectExample,
+  // The effect configuration is a map of the form item path to the effect configuration
+  effect: {
+    a: [
+      createEffectOptions<Effect>(DataEvent.onValueChange, ({ value, prevValue }) => {
+        console.log(`a changed: current: ${value} prev:${prevValue}`);
+      }),
+    ],
+    arr: [
+      createEffectOptions<ArrayAppendEffect>(DataEvent.onArrayAppend, ({ value, index }) => {
+        console.log(`arr appended: value=${value}, index=${index}`);
+      }),
+      createEffectOptions<ArrayDeleteEffect>(DataEvent.onArrayDelete, ({ index }) => {
+        console.log(`arr deleted: index=${index}`);
+      }),
+    ],
+    ['arr.*']: [
+      createEffectOptions<Effect>(DataEvent.onValueChange, ({ value, prevValue }) => {
+        console.log(`arr item value changed: current: ${value} prev:${prevValue}`);
+      }),
+    ],
+  },
+};
+```
+### Side Effects Event
+
+```ts pure
+export enum DataEvent {
+  /* Triggered when the value is different from the initial value or the previous value */
+  onValueChange = 'onValueChange',
+  /**
+   * Triggered when the initial value is set, the triggering scenarios are:
+   * - The form is configured with defaultValue, and the form is initialized
+   * - A form item is configured with defaultValue, and the form item is initialized without a value
+   */
+  onValueInit = 'onValueInit',
+  /**
+   * Triggered when the initial value is set, the triggering scenarios are:
+   * - The form is configured with defaultValue, and the form is initialized
+   * - A form item is configured with defaultValue, and the form item is initialized without a value
+   */
+  onValueInitOrChange = 'onValueInitOrChange',
+  /* Not recommended, this event depends on FieldArray rendering, and the value event may not be triggered in the case of non-rendering */
+  onArrayAppend = 'onArrayAppend',
+  /* Not recommended, this event depends on FieldArray rendering, and the value event may not be triggered in the case of non-rendering */
+  onArrayDelete = 'onArrayDelete',
+}
+```
+
+### API
+
+```ts pure
+// The effect of onValueChange and onValueInit follows this interface
+export type Effect<TFieldValue = any, TFormValues = any> = (props: {
+  value?: TFieldValue;
+  prevValue?: TFieldValue;
+  formValues?: TFormValues;
+  context?: NodeContext;
+}) => void;
+
+export type ArrayAppendEffect<TFieldValue = any, TFormValues = any> = (props: {
+  index?: number;
+  value?: TFieldValue;
+  arrayValues?: Array<TFieldValue>;
+  formValues?: TFormValues;
+  context?: NodeContext;
+}) => void;
+
+export type ArrayDeleteEffect<TFieldValue = any, TFormValues = any> = (props: {
+  index: number;
+  arrayValue?: Array<TFieldValue>;
+  formValues?: TFormValues;
+  context?: NodeContext;
+}) => void;
+```
+
+## Dynamic Dependencies
+
+Declare dependencies through deps
+
+```tsx pure
+import * as React from 'react';
+
+import {
+  Field,
+  FieldRenderProps,
+  FormMeta,
+  FormRenderProps,
+} from '@flowgram.ai/fixed-layout-editor';
+import Label from '@douyinfe/semi-ui/lib/es/form/label';
+import { Input, Switch } from '@douyinfe/semi-ui';
+
+interface FormData {
+  isBatch: boolean;
+  batch: string;
+}
+
+export const renderDynamicExample = ({ form }: FormRenderProps<FormData>) => (
+  <>
+    <div>
+      <Label> is Batch ? </Label>
+      <Field name="isBatch">
+        {({ field: { value, onChange } }: FieldRenderProps<boolean>) => (
+          <>
+            <Switch checked={value} onChange={onChange} size={'small'} />
+          </>
+        )}
+      </Field>
+    </div>
+    <Field
+      name="batch"
+      render={({ field }: FieldRenderProps<string>) =>
+        form.values?.isBatch ? (
+          <>
+            <Label> batch </Label>
+            <Input {...field} />
+          </>
+        ) : (
+          <></>
+        )
+      }
+      // Configure the dependencies of the form item through deps
+      deps={['isBatch']}
+    />
+  </>
+);
+
+export const DYNAMIC_V2: FormMeta = {
+  render: renderDynamicExample,
+};
+```

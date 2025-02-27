@@ -1,0 +1,8 @@
+{
+  "extends": "@flowgram.ai/ts-config/tsconfig.flow.path.json",
+  "compilerOptions": {
+    "types": ["vitest/globals"]
+  },
+  "include": ["./src", "./__mocks__"],
+  "exclude": ["node_modules"]
+}

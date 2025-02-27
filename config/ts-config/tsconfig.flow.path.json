@@ -1,0 +1,7 @@
+{
+  "extends": "./tsconfig.flow.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {}
+  }
+}

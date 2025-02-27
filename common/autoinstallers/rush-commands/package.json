@@ -1,0 +1,8 @@
+{
+  "name": "rush-commands",
+  "private": true,
+  "dependencies": {
+    "@rushstack/rush-sdk": "5.100.2",
+    "concurrently": "^8.2.2"
+  }
+}

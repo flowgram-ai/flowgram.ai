@@ -1,0 +1,17 @@
+[
+  {
+    "type": "file",
+    "name": "index",
+    "label": "体验环境"
+  },
+  {
+    "type": "dir",
+    "name": "fixed-layout",
+    "label": "固定布局"
+  },
+  {
+    "type": "dir",
+    "name": "free-layout",
+    "label": "自由布局"
+  }
+]

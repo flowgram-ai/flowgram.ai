@@ -1,0 +1,224 @@
+# Use Variables
+
+## Enable Variable Engine
+
+```tsx pure title="use-editor-props.ts"
+
+// EditorProps
+{
+  variableEngine: {
+    /**
+     * Need to enable the variable engine to use
+     */
+    enable: true
+  }
+}
+```
+
+## Node Output Variables
+
+### Set Output Variables through FlowNodeVariableData
+
+```tsx pure title="variable-plugin.tsx"
+import {
+  FlowNodeVariableData,
+  ASTFactory,
+} from '@flowgram.ai/fixed-layout-editor';
+
+// ....
+
+flowDocument.onNodeCreate(({ node }) => {
+  const variableData = node.getData<FlowNodeVariableData>(FlowNodeVariableData);
+
+  // ....
+
+  // 1. Clear VariableData if No value
+  variableData.clearVar()
+
+  // 2. Set a String Variable as output
+  variableData.setVar(
+    ASTFactory.createVariableDeclaration({
+      meta: {
+        title: `Your Output Variable Title`,
+      },
+      key: `your_variable_global_unique_key_${node.id}`,
+      type: ASTFactory.createString(),
+    })
+  )
+
+  // 3. Set a Complicated Variable Data as output
+  variableData.setVar(
+    ASTFactory.createVariableDeclaration({
+      meta: {
+        title: `Your Output Variable Title`,
+      },
+      key: `your_variable_global_unique_key_${node.id}`,
+      type: ASTFactory.createArray({
+        items: ASTFactory.createObject({
+          properties: [
+            ASTFactory.createProperty({
+              key: 'stringType',
+              type: ASTFactory.createString(),
+            }),
+            ASTFactory.createProperty({
+              key: 'booleanType',
+              type: ASTFactory.createBoolean(),
+            }),
+            ASTFactory.createProperty({
+              key: 'numberType',
+              type: ASTFactory.createNumber(),
+            }),
+            ASTFactory.createProperty({
+              key: 'integerType',
+              type: ASTFactory.createInteger(),
+            }),
+          ],
+        }),
+      }),
+    })
+  );
+
+  // ....
+})
+
+// ....
+
+```
+
+More usage, see: [Class: FlowNodeVariableData](https://flowgram-ai.github.io/flowgram.ai/auto-docs/editor/classes/FlowNodeVariableData.html)
+
+### Set Output Variables through Form Effect
+
+
+```tsx pure title="node-registries.ts"
+import {
+  FlowNodeRegistry,
+  createEffectFromVariableProvider,
+  ASTFactory,
+  type ASTNodeJSON
+} from '@flowgram.ai/fixed-layout-editor';
+
+export function createTypeFromValue(value: string): ASTNodeJSON | undefined {
+  switch (value) {
+    case 'string':
+      return ASTFactory.createString();
+    case 'number':
+      return ASTFactory.createNumber();
+    case 'boolean':
+      return ASTFactory.createBoolean();
+    case 'integer':
+      return ASTFactory.createInteger();
+
+    default:
+      return;
+  }
+}
+
+export const nodeRegistries: FlowNodeRegistry[] = [
+  {
+    type: 'start',
+    formMeta: {
+      effect: {
+        'path.to.value': createEffectFromVariableProvider({
+          // parse form value to variable
+          parse(v: string) {
+            return {
+              meta: {
+                title: `Your Output Variable Title`,
+              },
+              key: `your_variable_global_unique_key_${node.id}`,
+              type: createTypeFromValue(v)
+            }
+          }
+        }),
+      },
+      render: () => (
+       // ...
+      )
+    },
+  }
+]
+
+```
+
+
+## Node Consumes Variables
+
+### Get Variable List
+
+```tsx pure title="use-variable-tree.tsx"
+import {
+  type BaseVariableField,
+  useScopeAvailable,
+} from '@flowgram.ai/fixed-layout-editor';
+
+// .... Inside react hooks or component
+
+const available = useScopeAvailable()
+
+const renderVariable = (variable: BaseVariableField) => {
+  // ....
+}
+
+return available.variables.map(renderVariable)
+
+// ....
+
+
+```
+
+### Get Drilldown of Object Type Variable
+
+```tsx pure title="use-variable-tree.tsx"
+import {
+  type BaseVariableField,
+  isMatchAST,
+  ObjectType,
+} from '@flowgram.ai/fixed-layout-editor';
+
+// ....
+
+const renderVariable = (variable: BaseVariableField) => ({
+  title: variable.meta?.title,
+  key: variable.key,
+  // Only Object Type can drilldown
+  children: isMatchAST(type, ObjectType) ? type.properties.map(renderVariable) : [],
+});
+
+// ....
+
+```
+
+### Get Drilldown of Array Type Variable
+
+```tsx pure title="use-variable-tree.tsx"
+import {
+  type BaseVariableField,
+  type BaseType,
+  isMatchAST,
+  ObjectType,
+  ArrayType,
+} from '@flowgram.ai/fixed-layout-editor';
+
+// ....
+
+const getTypeChildren = (type?: BaseType): BaseVariableField[] => {
+  if (!type) return [];
+
+  // get properties of Object
+  if (isMatchAST(type, ObjectType)) return type.properties;
+
+  // get items type of Array
+  if (isMatchAST(type, ArrayType)) return getTypeChildren(type.items);
+};
+
+const renderVariable = (variable: BaseVariableField) => ({
+  title: variable.meta?.title,
+  key: variable.key,
+  // Only Object Type can drilldown
+  children: getTypeChildren(variable.type).map(renderVariable),
+});
+
+// ....
+
+```

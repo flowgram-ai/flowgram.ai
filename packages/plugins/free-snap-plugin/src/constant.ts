@@ -1,0 +1,17 @@
+import type { WorkflowSnapLayerOptions, WorkflowSnapServiceOptions } from './type';
+
+export const SnapDefaultOptions: WorkflowSnapServiceOptions & WorkflowSnapLayerOptions = {
+  enableEdgeSnapping: true,
+  edgeThreshold: 7,
+  enableGridSnapping: false,
+  gridSize: 20,
+  enableMultiSnapping: false,
+  enableOnlyViewportSnapping: true,
+  edgeColor: '#4E40E5',
+  alignColor: '#4E40E5',
+  edgeLineWidth: 2,
+  alignLineWidth: 2,
+  alignCrossWidth: 16,
+};
+
+export const Epsilon = 0.00001;

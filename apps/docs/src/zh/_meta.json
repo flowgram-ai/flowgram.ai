@@ -1,0 +1,22 @@
+[
+  {
+    "text": "指引",
+    "link": "/guide/introduction",
+    "activeMatch": "/guide/introduction"
+  },
+  {
+    "text": "例子",
+    "link": "/examples/",
+    "activeMatch": "/examples/"
+  },
+  {
+    "text": "常用 API",
+    "link": "/api/",
+    "activeMatch": "/api/"
+  },
+  {
+    "text": "API 文档",
+    "link": "/auto-docs/",
+    "activeMatch": "/auto-docs/"
+  }
+]

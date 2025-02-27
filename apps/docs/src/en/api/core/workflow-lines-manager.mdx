@@ -1,0 +1,29 @@
+# WorkflowLinesManager (free)
+
+Free layout line management, currently attached to the free layout document
+
+[> API Detail](https://flowgram-ai.github.io/flowgram.ai/auto-docs/free-layout-core/classes/WorkflowLinesManager.html)
+
+```
+import { useClientContext } from '@flowgram.ai/free-layout-editor'
+
+const ctx = useClientContext();
+console.log(ctx.document.linesManager)
+```
+
+## getAllLines
+
+Get all line entities
+
+```ts pure
+const allLines = ctx.document.linesManager.getAllLines()
+
+```
+
+## toJSON
+
+Export line data
+
+```ts pure
+const json = ctx.document.linesManager.toJSON()
+```

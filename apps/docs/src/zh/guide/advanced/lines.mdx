@@ -1,0 +1,58 @@
+# 自由布局线条
+
+自由布局的线条通过 [WorkflowLinesManager](/flowgram.ai/api/core/workflow-lines-manager.html) 管理
+
+## 获取当前节点的输入/输出节点
+
+```ts pure
+import { WorkflowNodeLinesData } from '@flowgram.ai/free-layout-editor'
+
+// 获取当前节点的输入节点（通过连接线计算）
+node.geData(WorkflowNodeLinesData).inputNodes
+// 获取所有输入节点 （会往上递归获取所有）
+node.geData(WorkflowNodeLinesData).allInputNodes
+// 获取输出节点
+node.geData(WorkflowNodeLinesData).outputNodes
+// 获取所有输出节点
+node.geData(WorkflowNodeLinesData).allOutputNodes
+
+```
+
+## 节点监听自身的连线变化并刷新
+
+```tsx pure
+
+import {
+  useRefresh,
+  WorkflowNodeLinesData,
+} from '@flowgram.ai/free-layout-editor';
+
+function NodeRender({ node }) {
+  const refresh = useRefresh()
+  const linesData = node.get(WorkflowNodeLinesData)
+  useEffect(() => {
+    const dispose = linesData.onDataChange(() => refresh())
+    return () => dispose.dispose()
+  }, [])
+  return <div>xxxx</div>
+}
+
+```
+
+## 监听所有线条的连线变化
+
+```ts pure
+import { useEffect } from 'react'
+import { useClientContext, useRefresh } from '@flowgram.ai/free-layout-editor'
+
+
+function SomeReact() {
+  const refresh = useRefresh()
+  const linesManager = useClientContext().document.linesManager
+  useEffect(() => {
+      const dispose = linesManager.onAvailableLinesChange(() => refresh())
+      return () => dispose.dispose()
+  }, [])
+  console.log(ctx.document.linesManager.getAllLines())
+}
+```

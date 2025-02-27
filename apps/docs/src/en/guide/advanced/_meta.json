@@ -1,0 +1,10 @@
+[
+  "form",
+  "variable",
+  "history",
+  {
+    "type": "dir",
+    "name": "interactive",
+    "label": "Interactive"
+  }
+]

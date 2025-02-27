@@ -1,0 +1,19 @@
+[
+  "introduction",
+  {
+    "type": "dir",
+    "name": "getting-started",
+    "label": "快速开始"
+  },
+  {
+    "type": "dir",
+    "name": "advanced",
+    "label": "进阶"
+  },
+  {
+    "type": "dir",
+    "name": "concepts",
+    "label": "概念"
+  },
+  "qa"
+]

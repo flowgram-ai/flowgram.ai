@@ -1,0 +1,193 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`test Basic Variable Declaration > test globalVariableTable variables 1`] = `
+[
+  "string",
+  "boolean",
+  "number",
+  "integer",
+  "object",
+  "map",
+]
+`;
+
+exports[`test Basic Variable Declaration > test remove variable, update variable, add variable by from a new json 1`] = `
+[
+  "object",
+  "new_integer",
+]
+`;
+
+exports[`test Basic Variable Declaration > test remove variable, update variable, add variable by from a new json 2`] = `[]`;
+
+exports[`test Basic Variable Declaration > test simple variable declarations 1`] = `
+{
+  "kind": "VariableDeclarationList",
+  "properties": [
+    {
+      "initializer": undefined,
+      "key": "string",
+      "kind": "VariableDeclaration",
+      "meta": undefined,
+      "type": {
+        "kind": "String",
+      },
+    },
+    {
+      "initializer": undefined,
+      "key": "boolean",
+      "kind": "VariableDeclaration",
+      "meta": undefined,
+      "type": {
+        "kind": "Boolean",
+      },
+    },
+    {
+      "initializer": undefined,
+      "key": "number",
+      "kind": "VariableDeclaration",
+      "meta": undefined,
+      "type": {
+        "kind": "Number",
+      },
+    },
+    {
+      "initializer": undefined,
+      "key": "integer",
+      "kind": "VariableDeclaration",
+      "meta": undefined,
+      "type": {
+        "kind": "Integer",
+      },
+    },
+    {
+      "initializer": undefined,
+      "key": "object",
+      "kind": "VariableDeclaration",
+      "meta": undefined,
+      "type": {
+        "kind": "Object",
+        "properties": [
+          {
+            "initializer": undefined,
+            "key": "key1",
+            "kind": "Property",
+            "meta": undefined,
+            "type": {
+              "kind": "String",
+            },
+          },
+          {
+            "initializer": undefined,
+            "key": "key2",
+            "kind": "Property",
+            "meta": undefined,
+            "type": {
+              "kind": "Object",
+              "properties": [
+                {
+                  "initializer": undefined,
+                  "key": "key1",
+                  "kind": "Property",
+                  "meta": undefined,
+                  "type": {
+                    "kind": "Number",
+                  },
+                },
+              ],
+            },
+          },
+          {
+            "initializer": undefined,
+            "key": "key3",
+            "kind": "Property",
+            "meta": undefined,
+            "type": {
+              "items": undefined,
+              "kind": "Array",
+            },
+          },
+          {
+            "initializer": undefined,
+            "key": "key4",
+            "kind": "Property",
+            "meta": undefined,
+            "type": {
+              "items": {
+                "kind": "Object",
+                "properties": [
+                  {
+                    "initializer": undefined,
+                    "key": "key1",
+                    "kind": "Property",
+                    "meta": undefined,
+                    "type": {
+                      "kind": "Boolean",
+                    },
+                  },
+                ],
+              },
+              "kind": "Array",
+            },
+          },
+        ],
+      },
+    },
+    {
+      "initializer": undefined,
+      "key": "map",
+      "kind": "VariableDeclaration",
+      "meta": undefined,
+      "type": {
+        "keyType": {
+          "kind": "String",
+        },
+        "kind": "Map",
+        "valueType": {
+          "kind": "Number",
+        },
+      },
+    },
+  ],
+}
+`;
+
+exports[`test Basic Variable Declaration > variable declaration subscribe 1`] = `
+{
+  "kind": "Number",
+}
+`;
+
+exports[`test Basic Variable Declaration > variable declaration subscribe 2`] = `
+{
+  "kind": "Object",
+  "properties": [
+    {
+      "initializer": undefined,
+      "key": "key1",
+      "kind": "Property",
+      "meta": undefined,
+      "type": {
+        "kind": "String",
+      },
+    },
+  ],
+}
+`;
+
+exports[`test Basic Variable Declaration > variable declaration subscribe 3`] = `
+{
+  "kind": "Object",
+  "properties": [
+    {
+      "initializer": undefined,
+      "key": "key1",
+      "kind": "Property",
+      "meta": undefined,
+      "type": {
+        "kind": "Number",
+      },
+    },
+  ],
+}
+`;
