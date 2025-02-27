@@ -407,15 +407,15 @@ export const HistoryList = () => {
 ```
 
 ## 3. API 列表
-### 3.1. [OperationMeta](https://flowgram-ai.github.io/flowgram.ai/auto-docs/fixed-history-plugin/interfaces/OperationMeta.html)
+### 3.1. [OperationMeta](https://flowgram-ai.org/auto-docs/fixed-history-plugin/interfaces/OperationMeta.html)
 操作元数据，用以定义一个操作
 
-### 3.2. [Operation](https://flowgram-ai.github.io/flowgram.ai/auto-docs/fixed-history-plugin/interfaces/Operation.html)
+### 3.2. [Operation](https://flowgram-ai.org/auto-docs/fixed-history-plugin/interfaces/Operation.html)
 操作数据，通过 type 和 OperationMeta 关联
 
-### 3.3. [OperationService](https://flowgram-ai.github.io/flowgram.ai/auto-docs/fixed-history-plugin/classes/OperationService.html)
+### 3.3. [OperationService](https://flowgram-ai.org/auto-docs/fixed-history-plugin/classes/OperationService.html)
 
-[onApply](https://flowgram-ai.github.io/flowgram.ai/auto-docs/fixed-history-plugin/classes/OperationService.html#onapply)
+[onApply](https://flowgram-ai.org/auto-docs/fixed-history-plugin/classes/OperationService.html#onapply)
 想监听某个触发的操作可以使用onApply
 
 ```tsx pure
@@ -425,14 +425,14 @@ useService(OperationService).onApply((op: Operation) => {
 })
 ```
 
-### 3.4. [HistoryService](https://flowgram-ai.github.io/flowgram.ai/auto-docs/fixed-history-plugin/classes/HistoryService.html)
+### 3.4. [HistoryService](https://flowgram-ai.org/auto-docs/fixed-history-plugin/classes/HistoryService.html)
 History 模块核心 API 暴露的Service
 
-### 3.5. [UndoRedoService](https://flowgram-ai.github.io/flowgram.ai/auto-docs/fixed-history-plugin/classes/UndoRedoService.html)
+### 3.5. [UndoRedoService](https://flowgram-ai.org/auto-docs/fixed-history-plugin/classes/UndoRedoService.html)
 管理 UndoRedo 栈的服务
 
-### 3.6. [HistoryStack](https://flowgram-ai.github.io/flowgram.ai/auto-docs/fixed-history-plugin/classes/HistoryStack.html)
+### 3.6. [HistoryStack](https://flowgram-ai.org/auto-docs/fixed-history-plugin/classes/HistoryStack.html)
 历史栈，监听所有 push undo redo 操作，并记录到栈里面
 
-### 3.7. [HistoryDatabase](https://flowgram-ai.github.io/flowgram.ai/auto-docs/history-storage/classes/HistoryDatabase.html)
+### 3.7. [HistoryDatabase](https://flowgram-ai.org/auto-docs/history-storage/classes/HistoryDatabase.html)
 持久化数据库操作

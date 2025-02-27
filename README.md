@@ -17,7 +17,7 @@ our name.
 
 ## 📖 Documentation
 
-- [Official Documentation](https://flowgram-ai.github.io/flowgram.ai/)
+- [Official Documentation](https://flowgram-ai.org/)
 - [Contributing Guidelines](https://github.com/flowgram-ai/flowgram.ai/blob/main/CONTRIBUTING.md)
 
 ## 📦 Packages
@@ -32,7 +32,7 @@ our name.
 
 <div>
   <p>
-    <a href="https://flowgram-ai.github.io/flowgram.ai/examples/fixed-layout/fixed-feature-overview.html">
+    <a href="https://flowgram-ai.org/examples/fixed-layout/fixed-feature-overview.html">
         Fixed Layout
     </a>
   </p>
@@ -45,7 +45,7 @@ our name.
   </div>
   <div>
   <p>
-    <a href="https://flowgram-ai.github.io/flowgram.ai/examples/free-layout/free-feature-overview.html">
+    <a href="https://flowgram-ai.org/examples/free-layout/free-feature-overview.html">
       Free Layout
     </a>
   </p>

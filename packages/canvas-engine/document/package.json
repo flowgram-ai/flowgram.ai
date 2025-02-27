@@ -6,7 +6,7 @@
     "flow",
     "engine"
   ],
-  "homepage": "https://flowgram-ai.github.io/flowgram.ai/",
+  "homepage": "https://flowgram-ai.org/",
   "repository": "https://github.com/flowgram-ai/flowgram.ai",
   "license": "MIT",
   "exports": {
