@@ -1,7 +1,7 @@
 {
   "name": "@flowgram.ai/free-auto-layout-plugin",
   "version": "0.1.0",
-  "homepage": "https://flowgram-ai.org/",
+  "homepage": "https://flowgram.ai/",
   "repository": "https://github.com/flowgram-ai/flowgram.ai",
   "license": "MIT",
   "exports": {
